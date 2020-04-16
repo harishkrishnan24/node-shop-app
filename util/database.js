@@ -1,8 +1,29 @@
-const Sequelize = require('sequelize');
+const mongodb = require("mongodb");
+const MongoClient = mongodb.MongoClient;
 
-const sequelize = new Sequelize('ecommerce-app', 'root', 'rootuser', {
-  dialect: 'mysql',
-  host: 'localhost'
-});
+let _db;
 
-module.exports = sequelize;
+const mongoConnect = (cb) => {
+	MongoClient.connect(
+		`mongodb+srv://test:test@ecommerce-app-eq446.mongodb.net/ecommerceapp?retryWrites=true&w=majority`
+	)
+		.then((client) => {
+			console.log("Connected to DB!");
+			_db = client.db();
+			cb();
+		})
+		.catch((err) => {
+			console.log(err);
+			throw err;
+		});
+};
+
+const getDb = () => {
+	if (_db) {
+		return _db;
+	}
+	throw "No database connection";
+};
+
+exports.mongoConnect = mongoConnect;
+exports.getDb = getDb;
