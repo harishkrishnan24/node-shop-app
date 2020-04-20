@@ -19,9 +19,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use((req, res, next) => {
-	User.findById("5e9aea05ad779f244bcd8482")
+	User.findById("5e9d2f916ad48d602c4ed5d7")
 		.then((user) => {
-			req.user = new User(user.name, user.email, user.cart, user._id);
+			req.user = user;
 			next();
 		})
 		.catch((err) => console.log(err));
@@ -37,6 +37,16 @@ mongoose
 		"mongodb+srv://test:test@ecommerce-app-eq446.mongodb.net/ecommerceapp?retryWrites=true&w=majority"
 	)
 	.then((result) => {
+		User.findOne().then((user) => {
+			if (!user) {
+				const user = new User({
+					name: "Harish",
+					email: "harish@test.com",
+					cart: { items: [] },
+				});
+				user.save();
+			}
+		});
 		app.listen(3002);
 	})
 	.catch((err) => {
