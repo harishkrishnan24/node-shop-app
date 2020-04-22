@@ -4,11 +4,19 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const session = require("express-session");
+const MongoDBStore = require("connect-mongodb-session")(session);
 
 const errorController = require("./controllers/error");
 const User = require("./models/user");
 
+const MONGODB_URI =
+	"mongodb+srv://test:test@ecommerce-app-eq446.mongodb.net/ecommerceapp?authSource=admin&replicaSet=ecommerce-app-shard-0&readPreference=primary&appname=MongoDB%20Compass&ssl=true";
+
 const app = express();
+const store = new MongoDBStore({
+	uri: MONGODB_URI,
+	collection: "sessions",
+});
 
 app.set("view engine", "ejs");
 app.set("views", "views");
@@ -24,11 +32,15 @@ app.use(
 		secret: "my secret",
 		resave: false,
 		saveUninitialized: false,
+		store,
 	})
 );
 
 app.use((req, res, next) => {
-	User.findById("5e9d2f916ad48d602c4ed5d7")
+	if (!req.session.user) {
+		return next();
+	}
+	User.findById(req.session.user._id)
 		.then((user) => {
 			req.user = user;
 			next();
@@ -43,9 +55,7 @@ app.use(authRoutes);
 app.use(errorController.get404);
 
 mongoose
-	.connect(
-		"mongodb+srv://test:test@ecommerce-app-eq446.mongodb.net/ecommerceapp?authSource=admin&replicaSet=ecommerce-app-shard-0&readPreference=primary&appname=MongoDB%20Compass&ssl=true"
-	)
+	.connect(MONGODB_URI)
 	.then((result) => {
 		User.findOne().then((user) => {
 			if (!user) {
